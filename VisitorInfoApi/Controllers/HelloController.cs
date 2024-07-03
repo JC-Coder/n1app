@@ -41,7 +41,32 @@ namespace VisitorInfoApi.Controllers
         private string GetClientIpAddress()
         {
             var baseIp = "105.112.119.81";
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? baseIp;
+            string clientIp;
+
+             // Check for X-Forwarded-For header
+    var forwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+    if (!string.IsNullOrEmpty(forwardedFor))
+    {
+        // X-Forwarded-For can contain multiple IPs; the client IP is typically the first one
+        clientIp = forwardedFor.Split(',')[0].Trim();
+    }
+    else
+    {
+        // If X-Forwarded-For is not present, try X-Real-IP
+        var realIp = HttpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(realIp))
+        {
+            clientIp = realIp;
+        }
+        else
+        {
+            // If neither header is present, fall back to RemoteIpAddress
+            clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? baseIp;
+        }
+    }
+
+
+            _logger.LogInformation($"Client IP: {clientIp}");
 
             if (clientIp == "::1")
             {
@@ -52,6 +77,8 @@ namespace VisitorInfoApi.Controllers
             {
                 clientIp = clientIp.Replace("::ffff:", "");
             }
+
+             _logger.LogInformation($"Client IP 2: {clientIp}");
 
             return clientIp;
         }

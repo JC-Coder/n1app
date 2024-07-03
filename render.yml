@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: visitorinfoapi
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: IPSTACK_API_KEY
+        sync: false
+      - key: TOMORROWIO_API_KEY
+        sync: false

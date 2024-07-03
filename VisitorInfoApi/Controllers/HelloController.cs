@@ -43,32 +43,21 @@ namespace VisitorInfoApi.Controllers
             var baseIp = "105.112.119.81";
             string clientIp;
 
-             // Check for X-Forwarded-For header
-    var forwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-    if (!string.IsNullOrEmpty(forwardedFor))
-    {
-        // X-Forwarded-For can contain multiple IPs; the client IP is typically the first one
-        clientIp = forwardedFor.Split(',')[0].Trim();
-    }
-    else
-    {
-        // If X-Forwarded-For is not present, try X-Real-IP
-        var realIp = HttpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(realIp))
-        {
-            clientIp = realIp;
-        }
-        else
-        {
-            // If neither header is present, fall back to RemoteIpAddress
-            clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? baseIp;
-        }
-    }
+            // Check for Render-specific header
+            var renderForwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(renderForwardedFor))
+            {
+                clientIp = renderForwardedFor.Split(',')[0].Trim();
+            }
+            else
+            {
+                // Fallback to other methods if Render header is not present
+                clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? baseIp;
+            }
 
+            _logger.LogInformation($"Original Client IP: {clientIp}");
 
-            _logger.LogInformation($"Client IP: {clientIp}");
-
-            if (clientIp == "::1")
+            if (clientIp == "::1" || clientIp.StartsWith("172.") || clientIp.StartsWith("10."))
             {
                 clientIp = baseIp;
             }
@@ -78,7 +67,7 @@ namespace VisitorInfoApi.Controllers
                 clientIp = clientIp.Replace("::ffff:", "");
             }
 
-             _logger.LogInformation($"Client IP 2: {clientIp}");
+            _logger.LogInformation($"Final Client IP: {clientIp}");
 
             return clientIp;
         }

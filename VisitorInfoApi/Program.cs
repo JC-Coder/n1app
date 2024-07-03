@@ -1,6 +1,7 @@
 
 using VisitorInfoApi.Services.Interfaces;
 using VisitorInfoApi.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace VisitorInfoApi
 {
@@ -45,6 +46,11 @@ namespace VisitorInfoApi
 
 
             app.MapControllers();
+
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
 
             // Use the PORT environment variable if available (for Render deployment)
             var port = Environment.GetEnvironmentVariable("PORT") ?? "80";
